@@ -34,7 +34,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Package
-        run:
-          - ./scripts/package.sh --version 1.0.0
-          - sudo skopeo copy "oci-archive:${GITHUB_WORKSPACE}/buildpackage.cnb" "docker://${{ env.REGISTRY }}"
+        run: |
+             ./scripts/package.sh --version 1.0.0
+             sudo skopeo copy "oci-archive:${GITHUB_WORKSPACE}/buildpackage.cnb" "docker://${{ env.REGISTRY }}"
 
