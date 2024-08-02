@@ -36,5 +36,5 @@ jobs:
       - name: Package
         run: |
              ./scripts/package.sh --version 1.0.0
-             sudo skopeo copy "oci-archive:${GITHUB_WORKSPACE}/buildpackage.cnb" "docker://${{ env.REGISTRY }}"
+             sudo skopeo copy "oci-archive:build/buildpackage.cnb" "docker://${{ env.REGISTRY }}/buildpacks/yarn:${{ github.sha }}"
 
