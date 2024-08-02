@@ -30,15 +30,6 @@ jobs:
         run: |
              ./scripts/package.sh --version 1.0.0
              echo "Packaging the buildpack..."
-             echo ${{secrets.PUSH_TOKEN}} | docker login ghcr.io -u USERNAME --password-stdin
-             echo "docker://${{ env.REGISTRY }}/a1flecke/yarn/yarn-buildpack:${{ github.sha }}"
-             echo "extractings buildpack.tgz"
-             tar -xvf build/buildpack.tgz -C build
-             echo "What is in the build directory?"
-             ls -al build
-             echo "What is in the current directory?"
-             ls -al .
-             docker image load --input build/buildpack.tar
-             docker image ls 
-             sudo skopeo copy "oci-archive:build/buildpackage.cnb" "docker://${{ env.REGISTRY }}/a1flecke/yarn/yarn-buildpack:${{ github.sha }}"
+             echo ${{secrets.PUSH_TOKEN}} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+             sudo skopeo copy "oci-archive:build/buildpackage.cnb" "docker://docker.io/a1flecke/yarn/yarn-buildpack:${{ github.sha }}"
 
