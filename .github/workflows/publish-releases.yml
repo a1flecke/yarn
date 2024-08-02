@@ -1,41 +1,77 @@
-name: Publish Draft Releases
+name: Push Buildpackage
 
 on:
-  workflow_dispatch: {}
-  schedule:
-    - cron: '0 5 * * WED'  # Weekly on Wednesday at 5:00 AM UTC
-
-concurrency:
-  group: publish-release
+  release:
+    types:
+      - published
+env:
+  REGISTRIES_FILENAME: "registries.json"
 
 jobs:
-  publish:
-    name: Publish
+  release:
+    name: Release
     runs-on: ubuntu-22.04
+    needs: integration
     steps:
-      - name: Publish Draft Release With Highest Semantic Version
-        id: drafts
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAKETO_BOT_GITHUB_TOKEN }}
-        uses: paketo-buildpacks/github-config/actions/release/publish-drafts@main
+      - name: Setup Go
+        uses: actions/setup-go@v3
         with:
-          repo: ${{ github.repository }}
+          go-version: 'stable'
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-tags: true
+
+      - name: Package
+        run: ./scripts/package.sh --version 1.0.0
+
+      - name: Get buildpack type
+        id: get_buildpack_type
+        with:
+          assets: |
+            [
+              {
+                "path": "build/buildpack.tgz",
+                "name": "${{ github.event.repository.name }}-${{ steps.tag.outputs.tag }}.tgz",
+                "content_type": "application/gzip"
+              },
+              {
+                "path": "build/buildpackage.cnb",
+                "name": "${{ github.event.repository.name }}-${{ steps.tag.outputs.tag }}.cnb",
+                "content_type": "application/gzip"
+              }
+            ]
+        run: |
+          
+          if [ -f "extension.toml" ]; then
+            echo "buildpack_type=extension" >> "$GITHUB_OUTPUT"
+          else
+            echo "buildpack_type=buildpack" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildpackage
+          path: |
+            build/buildpack.tgz
+            build/buildpackage.cnb
 
   failure:
     name: Alert on Failure
     runs-on: ubuntu-22.04
-    needs: [ publish ]
-    if: ${{ always() && needs.publish.result == 'failure' }}
+    needs: [push]
+    if: ${{ always() && needs.push.result == 'failure' }}
     steps:
       - name: File Failure Alert Issue
         uses: paketo-buildpacks/github-config/actions/issue/file@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           repo: ${{ github.repository }}
-          label: "failure:release"
+          label: "failure:push"
           comment_if_exists: true
-          issue_title: "Failure: Publish draft releases"
+          issue_title: "Failure: Push Buildpackage workflow"
           issue_body: |
-            Publish All Draft Releases workflow [failed](https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}).
+            Push Buildpackage workflow [failed](https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}).
           comment_body: |
-             Another failure occurred: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}
+            Another failure occurred: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}
