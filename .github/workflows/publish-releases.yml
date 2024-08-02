@@ -1,9 +1,7 @@
 name: Push Buildpackage
 
-on:
-  release:
-    types:
-      - published
+on: push
+
 env:
   REGISTRIES_FILENAME: "registries.json"
 
