@@ -31,5 +31,6 @@ jobs:
              ./scripts/package.sh --version 1.0.0
              echo "Packaging the buildpack..."
              echo ${{secrets.PUSH_TOKEN}} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+             echo ${{secrets.PUSH_TOKEN}} | skopeo login docker.io -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
              sudo skopeo copy "oci-archive:build/buildpackage.cnb" "docker://docker.io/a1flecke/yarn-buildpack:${{ github.sha }}"
 
