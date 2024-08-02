@@ -3,12 +3,18 @@ name: Push Buildpackage
 on: push
 
 env:
-  REGISTRIES_FILENAME: "registries.json"
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   release:
     name: Release
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
     steps:
       - name: Setup Go
         uses: actions/setup-go@v3
@@ -20,22 +26,15 @@ jobs:
         with:
           fetch-tags: true
 
-      - name: Package
-        run: ./scripts/package.sh --version 1.0.0
-
-      - name: Get buildpack type
-        id: get_buildpack_type
-        run: |
-          
-          if [ -f "extension.toml" ]; then
-            echo "buildpack_type=extension" >> "$GITHUB_OUTPUT"
-          else
-            echo "buildpack_type=buildpack" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
-          name: buildpackage
-          path: |
-            build/buildpack.tgz
-            build/buildpackage.cnb
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Package
+        run:
+          - ./scripts/package.sh --version 1.0.0
+          - sudo skopeo copy "oci-archive:${GITHUB_WORKSPACE}/buildpackage.cnb" "docker://${{ env.REGISTRY }}"
+
