@@ -37,6 +37,6 @@ jobs:
         run: |
              ./scripts/package.sh --version 1.0.0
              echo "Packaging the buildpack..."
-             echo "docker://${{ env.REGISTRY }}/a1flecke/yarn:${{ github.sha }}"
-             sudo skopeo copy "oci-archive:build/buildpackage.cnb" "docker://${{ env.REGISTRY }}/a1flecke/yarn:${{ github.sha }}"
+             echo "docker://${{ env.REGISTRY }}/a1flecke/yarn/yarn-buildpack:${{ github.sha }}"
+             sudo skopeo copy "oci-archive:build/buildpackage.cnb" "docker://${{ env.REGISTRY }}/a1flecke/yarn/yarn-buildpack:${{ github.sha }}"
 
