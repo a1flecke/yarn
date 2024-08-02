@@ -32,8 +32,11 @@ jobs:
              echo "Packaging the buildpack..."
              echo ${{secrets.PUSH_TOKEN}} | docker login ghcr.io -u USERNAME --password-stdin
              echo "docker://${{ env.REGISTRY }}/a1flecke/yarn/yarn-buildpack:${{ github.sha }}"
-             tar -xvf build/buildpack.tgz
+             echo "extractings buildpack.tgz"
+             tar -xvf build/buildpack.tgz -C build
+             echo "What is in the build directory?"
              ls -al build
+             echo "What is in the current directory?"
              ls -al .
              docker image load --input build/buildpack.tar
              docker image ls 
