@@ -26,17 +26,11 @@ jobs:
         with:
           fetch-tags: true
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.PUSH_TOKEN }}
-
       - name: Package
         run: |
              ./scripts/package.sh --version 1.0.0
              echo "Packaging the buildpack..."
+             echo ${{secrets.PUSH_TOKEN}} | docker login ghcr.io -u USERNAME --password-stdin
              echo "docker://${{ env.REGISTRY }}/a1flecke/yarn/yarn-buildpack:${{ github.sha }}"
              sudo skopeo copy "oci-archive:build/buildpackage.cnb" "docker://${{ env.REGISTRY }}/a1flecke/yarn/yarn-buildpack:${{ github.sha }}"
 
